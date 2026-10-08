@@ -164,9 +164,11 @@ job-application-tracker/
 │   └── 404.html  db_error.html
 ├── static/style.css
 ├── tests/                   # pytest unit tests
+├── pytest.ini               # Tells pytest where the tests are
+├── README.md                # Project description and setup (this file)
 ├── AI_USAGE.md              # How generative AI was used
-├── requirements.txt
-└── .env.example
+├── requirements.txt         # Python packages to install
+└── .env.example             # Template for your .env (MySQL password)
 ```
 
 ## Security notes
