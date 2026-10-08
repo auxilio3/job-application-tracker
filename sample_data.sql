@@ -3,9 +3,8 @@
 -- This is the same data built up in Assignments 2-5, plus required
 -- skills for every job (for Job Match) and some interview history.
 --
--- Run AFTER schema.sql. Do not run this on a homework database that
--- already has this data (you would get duplicates) - use
--- upgrade_homework_db.sql for that instead.
+-- Run AFTER schema.sql (running it twice without schema.sql in
+-- between would add duplicate rows).
 -- =====================================================================
 
 USE job_tracker;

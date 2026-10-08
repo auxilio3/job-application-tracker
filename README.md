@@ -75,16 +75,14 @@ cd job-application-tracker
 ### 3. Create the database (MySQL Workbench)
 
 Open Workbench, connect to your local instance, then use
-**File → Open SQL Script** and click the ⚡ button to run:
+**File → Open SQL Script** and click the ⚡ button to run, in order:
 
-| Your situation | Run |
-|---|---|
-| **New computer / no job_tracker database** | `schema.sql`, then `sample_data.sql` |
-| **You already built job_tracker in the homework** and want to keep it | `upgrade_homework_db.sql` only |
+1. `schema.sql`: creates the `job_tracker` database and its tables
+2. `sample_data.sql`: loads the homework data (Assignments 2-5) plus
+   skills and interviews
 
-⚠️ `schema.sql` **drops** any existing `job_tracker` database. That's
-what you want on a fresh machine, but don't run it over your homework
-data.
+⚠️ `schema.sql` **drops** any existing `job_tracker` database first, so
+running it again always gives you a clean start.
 
 ### 4. Install the Python packages
 
@@ -154,7 +152,6 @@ job-application-tracker/
 ├── validation.py            # Server-side form validation
 ├── schema.sql               # Builds job_tracker from scratch (homework tables + JSON)
 ├── sample_data.sql          # Homework data (Assignments 2-5) + skills + interviews
-├── upgrade_homework_db.sql  # Adds the project columns to an existing homework DB
 ├── templates/
 │   ├── base.html            # Layout, navbar, shared delete dialog
 │   ├── macros.html          # Reusable form fields, badges, buttons

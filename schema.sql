@@ -8,9 +8,8 @@
 --       applications.interview_data - JSON array of interview rounds
 --   * the indexes from Assignment 3
 --
--- WARNING: this DROPS any existing job_tracker database first.
--- If you already built job_tracker in the homework and want to keep
--- that data, run upgrade_homework_db.sql instead.
+-- WARNING: this DROPS any existing job_tracker database first,
+-- so running it again always gives a clean start.
 --
 --   Run:  MySQL Workbench -> File -> Open SQL Script -> schema.sql -> ⚡
 --   Then (optional) sample_data.sql for demo data.
