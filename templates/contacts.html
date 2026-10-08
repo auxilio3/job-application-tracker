@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Contacts{% endblock %}
+{% block content %}
+{{ m.page_header('Contacts', 'Recruiters, hiring managers, and referrals', url_for('contact_new'), 'Add contact') }}
+
+<form class="row g-2 mb-3" method="get" role="search">
+    <div class="col-sm-8 col-md-6">
+        <input type="search" class="form-control" name="q" value="{{ q }}" placeholder="Search by name, title, or company" aria-label="Search contacts">
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i> Search</button>
+        {% if q %}<a class="btn btn-link" href="{{ url_for('contacts') }}">Clear</a>{% endif %}
+    </div>
+</form>
+
+{% if contacts %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Job title</th>
+                <th>Company</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th class="text-end">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for k in contacts %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('contact_detail', contact_id=k.contact_id) }}" class="fw-semibold">{{ k.contact_name }}</a>
+                    {% if k.linkedin_url %}<a href="{{ k.linkedin_url|ext_url }}" target="_blank" rel="noopener noreferrer" class="ms-1" aria-label="LinkedIn profile"><i class="bi bi-linkedin"></i></a>{% endif %}
+                </td>
+                <td>{{ k.job_title or '—' }}</td>
+                <td><a href="{{ url_for('company_detail', company_id=k.company_id) }}" class="link-secondary">{{ k.company_name }}</a></td>
+                <td>{% if k.email %}<a href="mailto:{{ k.email }}">{{ k.email }}</a>{% else %}—{% endif %}</td>
+                <td class="text-nowrap">{{ k.phone or '—' }}</td>
+                <td class="text-end text-nowrap">
+                    <a href="{{ url_for('contact_edit', contact_id=k.contact_id) }}" class="btn btn-sm btn-outline-secondary" aria-label="Edit {{ k.contact_name }}"><i class="bi bi-pencil"></i></a>
+                    {{ m.delete_button(url_for('contact_delete', contact_id=k.contact_id), k.contact_name, small=true) }}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<p class="text-body-secondary small mt-2">{{ contacts|length }} contact{{ '' if contacts|length == 1 else 's' }}</p>
+{% elif q %}
+{{ m.empty_state('No contacts match "' ~ q ~ '".') }}
+{% else %}
+{{ m.empty_state('No contacts yet. Save the recruiters and hiring managers you talk to.', url_for('contact_new'), 'Add contact') }}
+{% endif %}
+{% endblock %}
