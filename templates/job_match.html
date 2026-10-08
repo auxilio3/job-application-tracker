@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Job Match{% endblock %}
+{% block content %}
+{{ m.page_header('Job Match', 'Enter your skills to see which jobs fit you best') }}
+
+<div class="card mb-4"><div class="card-body">
+<form method="get" class="row g-3 align-items-end">
+    <div class="col-lg-6">
+        <label for="skills" class="form-label">Your skills</label>
+        <input type="text" class="form-control" id="skills" name="skills" value="{{ skills_text }}"
+               placeholder="e.g. Python, SQL, Splunk, Linux" required aria-describedby="skillsHelp">
+        <div id="skillsHelp" class="form-text">Separate with commas. Matching ignores capitalization and understands a few abbreviations (py, js, IR).</div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <label for="min" class="form-label">Minimum match</label>
+        <select class="form-select" id="min" name="min">
+            {% for p in [0, 25, 50, 75, 100] %}
+            <option value="{{ p }}" {% if p == min_percent %}selected{% endif %}>{{ 'Any' if p == 0 else p ~ '%+' }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-6 col-lg-2">
+        <label for="type" class="form-label">Job type</label>
+        <select class="form-select" id="type" name="type">
+            <option value="">All</option>
+            {% for t in JOB_TYPES %}<option {% if t == job_type %}selected{% endif %}>{{ t }}</option>{% endfor %}
+        </select>
+    </div>
+    <div class="col-lg-2 d-grid">
+        <div class="form-check mb-1">
+            <input class="form-check-input" type="checkbox" id="closed" name="closed" value="1" {% if include_closed %}checked{% endif %}>
+            <label class="form-check-label small" for="closed">Include closed postings</label>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-stars"></i> Find matches</button>
+    </div>
+</form>
+</div></div>
+
+{% if results is none %}
+{{ m.empty_state('Enter your skills above to rank every job by how well you match its requirements.') }}
+{% else %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <span class="text-body-secondary">Your skills:</span> {{ m.skill_badges(skills) }}
+</div>
+
+{% if results %}
+<p class="text-body-secondary small">{{ results|length }} matching job{{ '' if results|length == 1 else 's' }}, best first.
+{% if unscored %}{{ unscored }} job{{ '' if unscored == 1 else 's' }} without listed skills {{ 'was' if unscored == 1 else 'were' }} skipped.{% endif %}</p>
+
+<ol class="list-unstyled">
+{% for r in results %}
+    {% set level = 'high' if r.percent >= 75 else ('mid' if r.percent >= 40 else 'low') %}
+    <li class="card mb-3">
+        <div class="card-body d-flex flex-wrap gap-3">
+            <div class="text-center match-score">
+                <div class="match-percent match-{{ level }}">{{ r.percent }}%</div>
+                <div class="small text-body-secondary">{{ r.matched_count }}/{{ r.total }} skills</div>
+            </div>
+            <div class="flex-grow-1" style="min-width: 240px">
+                <div class="d-flex flex-wrap justify-content-between gap-2">
+                    <div>
+                        <span class="text-body-secondary small">#{{ loop.index }}</span>
+                        <a href="{{ url_for('job_detail', job_id=r.job_id) }}" class="fw-semibold">{{ r.job_title }}</a>
+                        <span class="text-body-secondary">at {{ r.company_name }}</span>
+                        {% if r.applied %}<span class="badge text-bg-success ms-1">Applied</span>{% endif %}
+                        {% if not r.is_active %}<span class="badge text-bg-secondary ms-1">Closed</span>{% endif %}
+                    </div>
+                    <div class="small text-body-secondary">{{ r.job_type or '' }}{% if r.salary_min or r.salary_max %} · {{ m.salary(r.salary_min, r.salary_max) }}{% endif %}</div>
+                </div>
+                <div class="progress match-meter my-2" role="progressbar" aria-label="Match {{ r.percent }}%"
+                     aria-valuenow="{{ r.percent }}" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar {{ 'bg-success' if level == 'high' else ('bg-warning' if level == 'mid' else 'bg-secondary') }}" style="width: {{ r.percent }}%"></div>
+                </div>
+                {% if r.matched %}<div class="mb-1"><span class="small text-body-secondary me-1">You have:</span>{{ m.skill_badges(r.matched, 'match') }}</div>{% endif %}
+                {% if r.missing %}<div><span class="small text-body-secondary me-1">Missing:</span>{{ m.skill_badges(r.missing, 'missing') }}</div>{% endif %}
+            </div>
+            {% if not r.applied %}
+            <div class="align-self-center">
+                <a href="{{ url_for('application_new', job_id=r.job_id) }}" class="btn btn-sm btn-outline-primary">Log application</a>
+            </div>
+            {% endif %}
+        </div>
+    </li>
+{% endfor %}
+</ol>
+{% else %}
+{{ m.empty_state('No jobs reach that match level. Try lowering the minimum or adding more skills.') }}
+{% endif %}
+{% endif %}
+{% endblock %}

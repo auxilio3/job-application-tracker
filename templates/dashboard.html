@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-0">Dashboard</h1>
+        <p class="text-body-secondary mb-0">Your job search at a glance · {{ today|nicedate }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('application_new') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Log application</a>
+        <a href="{{ url_for('job_match') }}" class="btn btn-outline-primary"><i class="bi bi-stars"></i> Find matches</a>
+    </div>
+</div>
+
+<!-- Record counts -->
+<div class="row g-3 mb-4">
+    {% for key, label, icon, endpoint in [
+        ('companies', 'Companies', 'building', 'companies'),
+        ('jobs', 'Jobs', 'briefcase', 'jobs'),
+        ('applications', 'Applications', 'send', 'applications'),
+        ('contacts', 'Contacts', 'person-lines-fill', 'contacts')] %}
+    <div class="col-6 col-lg-3">
+        <a href="{{ url_for(endpoint) }}" class="card stat-tile h-100">
+            <div class="card-body d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="text-body-secondary small">{{ label }}</div>
+                    <div class="stat-value">{{ counts[key] }}</div>
+                </div>
+                <i class="bi bi-{{ icon }} stat-icon"></i>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Pipeline by status -->
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header bg-white"><h2 class="h6 mb-0">Applications by status</h2></div>
+            <div class="card-body">
+                {% set max_count = by_status.values()|max if counts.applications else 1 %}
+                {% for s in by_status %}
+                <a href="{{ url_for('applications', status=s) }}" class="d-flex align-items-center gap-3 mb-2 text-decoration-none text-body">
+                    <span style="width: 10rem">{{ s }}</span>
+                    <div class="status-bar flex-grow-1 status-{{ s|status_group }}" role="img" aria-label="{{ s }}: {{ by_status[s] }}">
+                        <div class="status-fill" style="width: {{ (100 * by_status[s] / max_count) if max_count else 0 }}%"></div>
+                    </div>
+                    <span class="fw-semibold text-end" style="width: 2rem">{{ by_status[s] }}</span>
+                </a>
+                {% endfor %}
+                <hr>
+                <div class="row text-center">
+                    <div class="col">
+                        <div class="stat-value fs-3">{{ counts.active_jobs }}</div>
+                        <div class="small text-body-secondary">Open postings</div>
+                    </div>
+                    <div class="col">
+                        <div class="stat-value fs-3">{{ rates.response }}%</div>
+                        <div class="small text-body-secondary" title="Share of applications that got any reply (phone screen, interview, offer, or rejection)">Response rate</div>
+                    </div>
+                    <div class="col">
+                        <div class="stat-value fs-3">{{ rates.interview }}%</div>
+                        <div class="small text-body-secondary" title="Share of applications that reached an interview or offer">Interview rate</div>
+                    </div>
+                    <div class="col">
+                        <div class="stat-value fs-3">{{ rates.avg_salary|money if rates.avg_salary is not none else '—' }}</div>
+                        <div class="small text-body-secondary" title="Average of each job's salary midpoint">Avg. salary</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming interviews -->
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-calendar-event"></i> Upcoming interviews</h2></div>
+            {% if upcoming %}
+            <ul class="list-group list-group-flush">
+                {% for i in upcoming %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('application_detail', application_id=i.application_id) }}" class="fw-semibold">{{ i.company_name }}</a>
+                        <span class="text-nowrap">{{ i.idate|nicedate }}{% if i.itime %}, {{ i.itime }}{% endif %}</span>
+                    </div>
+                    <div class="small text-body-secondary">{{ i.round_name or 'Interview' }} · {{ i.job_title }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="card-body text-body-secondary">Nothing scheduled. Add interviews from an application's edit page.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Recent applications -->
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0">Recent applications</h2>
+                <a href="{{ url_for('applications') }}" class="small">View all</a>
+            </div>
+            {% if recent %}
+            <ul class="list-group list-group-flush">
+                {% for a in recent %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{{ url_for('application_detail', application_id=a.application_id) }}">{{ a.job_title }}</a>
+                        <div class="small text-body-secondary">{{ a.company_name }} · {{ a.application_date|nicedate }}</div>
+                    </div>
+                    {{ m.status_badge(a.status) }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="card-body text-body-secondary">No applications yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Most requested skills -->
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header bg-white"><h2 class="h6 mb-0">Most requested skills</h2></div>
+            <div class="card-body">
+                {% if top_skills %}
+                <ul class="list-unstyled mb-0">
+                    {% for s in top_skills %}
+                    <li class="d-flex justify-content-between py-1 {% if not loop.last %}border-bottom{% endif %}">
+                        <span>{{ s.skill }}</span>
+                        <span class="text-body-secondary">{{ s.total }} job{{ '' if s.total == 1 else 's' }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-body-secondary mb-0">Add required skills to your jobs to see trends here.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
