@@ -1,0 +1,93 @@
+{# Reusable pieces shared by the list, detail and form pages. #}
+
+{% macro field(name, label, obj, errors, type='text', required=false, help=none, attrs='') %}
+<div class="mb-3">
+    <label for="{{ name }}" class="form-label">{{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+    <input type="{{ type }}" class="form-control {% if errors[name] %}is-invalid{% endif %}"
+           id="{{ name }}" name="{{ name }}" value="{{ obj[name] if obj[name] is not none else '' }}"
+           {% if required %}required{% endif %} {{ attrs|safe }}
+           {% if help %}aria-describedby="{{ name }}Help"{% endif %}>
+    {% if errors[name] %}<div class="invalid-feedback">{{ errors[name] }}</div>{% endif %}
+    {% if help %}<div id="{{ name }}Help" class="form-text">{{ help }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro textarea(name, label, obj, errors, rows=3, help=none, value=none) %}
+{% set current = value if value is not none else obj[name] %}
+<div class="mb-3">
+    <label for="{{ name }}" class="form-label">{{ label }}</label>
+    <textarea class="form-control {% if errors[name] %}is-invalid{% endif %}" id="{{ name }}"
+              name="{{ name }}" rows="{{ rows }}">{{ current if current is not none else '' }}</textarea>
+    {% if errors[name] %}<div class="invalid-feedback">{{ errors[name] }}</div>{% endif %}
+    {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{# options: list of (value, label) pairs #}
+{% macro select(name, label, options, selected, errors, required=false, blank='— Select —') %}
+<div class="mb-3">
+    <label for="{{ name }}" class="form-label">{{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+    <select class="form-select {% if errors[name] %}is-invalid{% endif %}" id="{{ name }}" name="{{ name }}"
+            {% if required %}required{% endif %}>
+        {% if blank %}<option value="">{{ blank }}</option>{% endif %}
+        {% for value, text in options %}
+        <option value="{{ value }}" {% if selected is not none and value|string == selected|string %}selected{% endif %}>{{ text }}</option>
+        {% endfor %}
+    </select>
+    {% if errors[name] %}<div class="invalid-feedback">{{ errors[name] }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro delete_button(action, name, warning='', small=false) %}
+<button type="button" class="btn {% if small %}btn-sm{% endif %} btn-outline-danger"
+        data-bs-toggle="modal" data-bs-target="#deleteModal"
+        data-action="{{ action }}" data-name="{{ name }}" data-warning="{{ warning }}"
+        aria-label="Delete {{ name }}">
+    <i class="bi bi-trash"></i>{% if not small %} Delete{% endif %}
+</button>
+{% endmacro %}
+
+{% macro status_badge(status) %}
+<span class="badge status-badge status-{{ status|status_group }}">{{ status or '—' }}</span>
+{% endmacro %}
+
+{% macro salary(min, max) %}
+{%- if min is not none and max is not none -%}{{ min|money }} – {{ max|money }}
+{%- elif min is not none -%}From {{ min|money }}
+{%- elif max is not none -%}Up to {{ max|money }}
+{%- else -%}<span class="text-body-secondary">—</span>{%- endif -%}
+{% endmacro %}
+
+{% macro skill_badges(skills, style='neutral') %}
+{% for s in skills %}<span class="badge skill-badge skill-{{ style }}">{{ s }}</span> {% endfor %}
+{% endmacro %}
+
+{% macro page_header(title, subtitle=none, add_url=none, add_label=none) %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-0">{{ title }}</h1>
+        {% if subtitle %}<p class="text-body-secondary mb-0">{{ subtitle }}</p>{% endif %}
+    </div>
+    {% if add_url %}
+    <a href="{{ add_url }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> {{ add_label }}</a>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro empty_state(message, add_url=none, add_label=none) %}
+<div class="empty-state text-center py-5">
+    <i class="bi bi-inbox fs-1 text-body-secondary"></i>
+    <p class="mt-2 mb-3 text-body-secondary">{{ message }}</p>
+    {% if add_url %}<a href="{{ add_url }}" class="btn btn-primary btn-sm">{{ add_label }}</a>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro detail_row(label, value) %}
+<dt class="col-sm-4 text-body-secondary fw-normal">{{ label }}</dt>
+<dd class="col-sm-8">{{ value if value else '—' }}</dd>
+{% endmacro %}
+
+{% macro link_or_dash(url, text=none) %}
+{%- if url -%}<a href="{{ url|ext_url }}" target="_blank" rel="noopener noreferrer">{{ text or url }} <i class="bi bi-box-arrow-up-right small"></i></a>
+{%- else -%}—{%- endif -%}
+{% endmacro %}

@@ -1,0 +1,142 @@
+/* Job Application Tracker - custom styles on top of Bootstrap 5 */
+
+:root {
+    --brand: #1f3a5f;
+    --brand-accent: #2f80ed;
+    --page-bg: #f5f7fa;
+}
+
+body {
+    background: var(--page-bg);
+}
+
+.app-navbar {
+    background: var(--brand);
+}
+
+.app-navbar .nav-link.active {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 0.375rem;
+}
+
+.card {
+    border: 1px solid #e3e8ef;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.table > :not(caption) > * > * {
+    vertical-align: middle;
+}
+
+.table thead th {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #5b6573;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Dashboard stat tiles */
+.stat-tile {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.stat-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    color: var(--brand-accent);
+}
+
+/* Status pipeline bars on the dashboard */
+.status-bar {
+    height: 0.6rem;
+    background: #e9edf2;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.status-bar > div {
+    height: 100%;
+    border-radius: 999px;
+}
+
+/* One color per application status, used by badges and bars */
+.status-applied   { --status-color: #2f80ed; }
+.status-screening { --status-color: #8e5bd8; }
+.status-interview { --status-color: #e08a00; }
+.status-offer     { --status-color: #1e9e5a; }
+.status-rejected  { --status-color: #c9372c; }
+.status-withdrawn { --status-color: #6b7280; }
+
+.status-badge {
+    background: color-mix(in srgb, var(--status-color) 14%, white);
+    color: color-mix(in srgb, var(--status-color) 80%, black);
+    border: 1px solid color-mix(in srgb, var(--status-color) 35%, white);
+    font-weight: 600;
+}
+
+.status-fill {
+    background: var(--status-color);
+}
+
+/* Skill chips */
+.skill-badge {
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+.skill-neutral { background: #eef2f7; color: #344054; border-color: #dbe2ea; }
+.skill-match   { background: #e3f6ec; color: #11633a; border-color: #b7e4cb; }
+.skill-missing { background: #fff; color: #8a5a00; border-color: #f2cf8c; border-style: dashed; }
+
+/* Job Match */
+.match-percent {
+    font-size: 1.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.match-score {
+    width: 5.5rem;
+    flex-shrink: 0;
+}
+
+.match-high { color: #1e9e5a; }
+.match-mid  { color: #e08a00; }
+.match-low  { color: #6b7280; }
+
+.match-meter {
+    height: 0.5rem;
+}
+
+.empty-state {
+    border: 2px dashed #dbe2ea;
+    border-radius: 0.75rem;
+    background: #fff;
+}
+
+.interview-row + .interview-row {
+    border-top: 1px dashed #dbe2ea;
+    padding-top: 0.75rem;
+}
+
+dl.details dd {
+    word-break: break-word;
+}
+
+.status-other { --status-color: #475467; }

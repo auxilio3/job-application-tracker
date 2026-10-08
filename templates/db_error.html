@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Database error{% endblock %}
+{% block content %}
+<div class="py-4" style="max-width: 720px">
+    <h1 class="h3">Can't reach the database</h1>
+    <p>The app couldn't run a query against MySQL. The most common causes:</p>
+    <ol>
+        <li>MySQL isn't running.</li>
+        <li>The database hasn't been created yet. Run <code>mysql -u root -p &lt; schema.sql</code>.</li>
+        <li>The username or password in your <code>.env</code> file is wrong (copy <code>.env.example</code> to <code>.env</code> and fill it in).</li>
+    </ol>
+    <p class="text-body-secondary small mb-0">Details: {{ error }}</p>
+</div>
+{% endblock %}
