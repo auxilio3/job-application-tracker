@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}{{ company.company_name }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('companies') }}">Companies</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ company.company_name }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">{{ company.company_name }}</h1>
+        <p class="text-body-secondary mb-0">
+            {{ company.industry or 'Industry not set' }}
+            {% if company.city or company.state %} · {{ [company.city, company.state]|select|join(', ') }}{% endif %}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('company_edit', company_id=company.company_id) }}" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i> Edit</a>
+        {% set warn = 'This also deletes ' ~ jobs|length ~ ' job(s), ' ~ app_count ~ ' application(s), and ' ~ contacts|length ~ ' contact(s).' if (jobs or contacts) else '' %}
+        {{ m.delete_button(url_for('company_delete', company_id=company.company_id), company.company_name, warn) }}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6 text-uppercase text-body-secondary">Details</h2>
+                <dl class="row mb-0 details">
+                    {{ m.detail_row('Website', m.link_or_dash(company.website)) }}
+                    {{ m.detail_row('Industry', company.industry) }}
+                    {{ m.detail_row('City', company.city) }}
+                    {{ m.detail_row('State', company.state) }}
+                </dl>
+                {% if company.notes %}
+                <h2 class="h6 text-uppercase text-body-secondary mt-3">Notes</h2>
+                <p class="mb-0" style="white-space: pre-line">{{ company.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center bg-white">
+                <h2 class="h6 mb-0">Jobs ({{ jobs|length }})</h2>
+                <a href="{{ url_for('job_new', company_id=company.company_id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add job</a>
+            </div>
+            {% if jobs %}
+            <ul class="list-group list-group-flush">
+                {% for j in jobs %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{{ url_for('job_detail', job_id=j.job_id) }}">{{ j.job_title }}</a>{% if not j.is_active %} <span class="badge text-bg-secondary">Closed</span>{% endif %}
+                        <div class="small text-body-secondary">{{ j.job_type or 'Type not set' }} · {{ m.salary(j.salary_min, j.salary_max) }}</div>
+                    </div>
+                    <span class="badge text-bg-light">{{ j.app_count }} application{{ '' if j.app_count == 1 else 's' }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="card-body text-body-secondary">No jobs at this company yet.</div>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center bg-white">
+                <h2 class="h6 mb-0">Contacts ({{ contacts|length }})</h2>
+                <a href="{{ url_for('contact_new', company_id=company.company_id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i> Add contact</a>
+            </div>
+            {% if contacts %}
+            <ul class="list-group list-group-flush">
+                {% for k in contacts %}
+                <li class="list-group-item">
+                    <a href="{{ url_for('contact_detail', contact_id=k.contact_id) }}">{{ k.contact_name }}</a>
+                    <span class="text-body-secondary small">{{ k.job_title or '' }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="card-body text-body-secondary">No contacts at this company yet.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

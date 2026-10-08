@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}{{ 'Edit company' if editing else 'Add company' }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('companies') }}">Companies</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ 'Edit' if editing else 'Add' }}</li>
+    </ol>
+</nav>
+<h1 class="h3 mb-4">{{ 'Edit ' ~ company.company_name if editing else 'Add a company' }}</h1>
+
+{% if errors %}<div class="alert alert-danger">Please fix the highlighted fields below.</div>{% endif %}
+
+<div class="card"><div class="card-body">
+<form method="post" novalidate>
+    <div class="row">
+        <div class="col-md-8">{{ m.field('company_name', 'Company name', company, errors, required=true, attrs='maxlength="100"') }}</div>
+        <div class="col-md-4">{{ m.field('industry', 'Industry', company, errors, attrs='maxlength="50" placeholder="e.g. Cybersecurity"') }}</div>
+    </div>
+    {{ m.field('website', 'Website', company, errors, attrs='maxlength="200" placeholder="www.example.com"') }}
+    <div class="row">
+        <div class="col-md-8">{{ m.field('city', 'City', company, errors, attrs='maxlength="50"') }}</div>
+        <div class="col-md-4">{{ m.field('state', 'State', company, errors, attrs='maxlength="50"') }}</div>
+    </div>
+    {{ m.textarea('notes', 'Notes', company, errors, rows=4) }}
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">{{ 'Save changes' if editing else 'Add company' }}</button>
+        <a href="{{ url_for('company_detail', company_id=company.company_id) if editing else url_for('companies') }}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>
+</div></div>
+{% endblock %}
