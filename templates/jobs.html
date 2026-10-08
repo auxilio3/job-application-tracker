@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Jobs{% endblock %}
+{% block content %}
+{{ m.page_header('Jobs', 'Postings you have found', url_for('job_new'), 'Add job') }}
+
+<form class="row g-2 mb-3" method="get" role="search">
+    <div class="col-md-3">
+        <input type="search" class="form-control" name="q" value="{{ q }}" placeholder="Search title or company" aria-label="Search jobs">
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" name="company_id" aria-label="Filter by company">
+            <option value="">All companies</option>
+            {% for c in companies %}
+            <option value="{{ c.company_id }}" {% if c.company_id == company_id %}selected{% endif %}>{{ c.company_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <select class="form-select" name="show" aria-label="Open or closed">
+            <option value="">Open + closed</option>
+            <option value="active" {% if show == 'active' %}selected{% endif %}>Open only</option>
+            <option value="closed" {% if show == 'closed' %}selected{% endif %}>Closed only</option>
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <select class="form-select" name="type" aria-label="Filter by job type">
+            <option value="">All types</option>
+            {% for t in JOB_TYPES %}<option {% if t == job_type %}selected{% endif %}>{{ t }}</option>{% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2 d-flex gap-1">
+        <button class="btn btn-outline-primary flex-grow-1" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+        {% if q or job_type or company_id or show %}<a class="btn btn-link" href="{{ url_for('jobs') }}">Clear</a>{% endif %}
+    </div>
+</form>
+
+{% if jobs %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+            <tr>
+                <th>Job title</th>
+                <th>Company</th>
+                <th>Type</th>
+                <th>Salary</th>
+                <th>Posted</th>
+                <th>Key skills</th>
+                <th class="text-end">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for j in jobs %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('job_detail', job_id=j.job_id) }}" class="fw-semibold">{{ j.job_title }}</a>
+                    {% if not j.is_active %}<span class="badge text-bg-secondary ms-1">Closed</span>{% endif %}
+                    {% if j.app_count %}<span class="badge text-bg-light ms-1" title="Applications">{{ j.app_count }} app{{ '' if j.app_count == 1 else 's' }}</span>{% endif %}
+                </td>
+                <td><a href="{{ url_for('company_detail', company_id=j.company_id) }}" class="link-secondary">{{ j.company_name }}</a></td>
+                <td>{{ j.job_type or '—' }}</td>
+                <td class="text-nowrap">{{ m.salary(j.salary_min, j.salary_max) }}</td>
+                <td class="text-nowrap">{{ j.date_posted|nicedate or '—' }}</td>
+                <td>
+                    {{ m.skill_badges(j.requirements[:3]) }}
+                    {% if j.requirements|length > 3 %}<span class="small text-body-secondary">+{{ j.requirements|length - 3 }}</span>{% endif %}
+                </td>
+                <td class="text-end text-nowrap">
+                    <a href="{{ url_for('job_edit', job_id=j.job_id) }}" class="btn btn-sm btn-outline-secondary" aria-label="Edit {{ j.job_title }}"><i class="bi bi-pencil"></i></a>
+                    {{ m.delete_button(url_for('job_delete', job_id=j.job_id), j.job_title,
+                        'This also deletes ' ~ j.app_count ~ ' application(s) to this job.' if j.app_count else '', small=true) }}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<p class="text-body-secondary small mt-2">{{ jobs|length }} job{{ '' if jobs|length == 1 else 's' }}</p>
+{% elif q or job_type or company_id or show %}
+{{ m.empty_state('No jobs match those filters.') }}
+{% else %}
+{{ m.empty_state('No jobs yet. Add a posting you found.', url_for('job_new'), 'Add job') }}
+{% endif %}
+{% endblock %}
