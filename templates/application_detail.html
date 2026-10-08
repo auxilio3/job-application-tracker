@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Application · {{ application.job_title }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('applications') }}">Applications</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ application.job_title }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">{{ application.job_title }} {{ m.status_badge(application.status) }}</h1>
+        <p class="text-body-secondary mb-0">
+            <a href="{{ url_for('company_detail', company_id=application.company_id) }}">{{ application.company_name }}</a>
+            · Applied {{ application.application_date|nicedate }}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('application_edit', application_id=application.application_id) }}" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i> Edit</a>
+        {{ m.delete_button(url_for('application_delete', application_id=application.application_id), 'application for ' ~ application.job_title) }}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6 text-uppercase text-body-secondary">Details</h2>
+                <dl class="row mb-0 details">
+                    {{ m.detail_row('Job', ('<a href="' ~ url_for('job_detail', job_id=application.job_id) ~ '">View job details</a>')|safe) }}
+                    {{ m.detail_row('Resume', application.resume_version) }}
+                    {{ m.detail_row('Cover letter', 'Sent' if application.cover_letter_sent else 'Not sent') }}
+                    {{ m.detail_row('Response date', application.response_date|nicedate) }}
+                    {{ m.detail_row('Next / last interview', application.interview_date|nicedate) }}
+                </dl>
+                {% if application.notes %}
+                <h2 class="h6 text-uppercase text-body-secondary mt-3">Notes</h2>
+                <p class="mb-0" style="white-space: pre-line">{{ application.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header bg-white"><h2 class="h6 mb-0">People at {{ application.company_name }}</h2></div>
+            {% if contacts %}
+            <ul class="list-group list-group-flush">
+                {% for k in contacts %}
+                <li class="list-group-item">
+                    <a href="{{ url_for('contact_detail', contact_id=k.contact_id) }}">{{ k.contact_name }}</a>
+                    <div class="small text-body-secondary">{{ k.job_title or '' }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="card-body text-body-secondary small">
+                No contacts saved. <a href="{{ url_for('contact_new', company_id=application.company_id) }}">Add one</a>.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-white"><h2 class="h6 mb-0">Interviews ({{ application.interviews|length }})</h2></div>
+            {% if application.interviews %}
+            <ul class="list-group list-group-flush">
+                {% for i in application.interviews %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between flex-wrap">
+                        <strong>{{ i.round or 'Interview' }}</strong>
+                        <span class="text-body-secondary">
+                            {{ i.date|nicedate }}{% if i.time %} at {{ i.time }}{% endif %}
+                            {% if i.date and i.date >= today.isoformat() %}<span class="badge text-bg-warning ms-1">Upcoming</span>{% endif %}
+                        </span>
+                    </div>
+                    {% if i.interviewer %}<div class="small">With {{ i.interviewer }}</div>{% endif %}
+                    {% if i.notes %}<div class="small text-body-secondary mt-1">{{ i.notes }}</div>{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="card-body text-body-secondary">
+                No interviews recorded. <a href="{{ url_for('application_edit', application_id=application.application_id) }}">Add one</a> when it's scheduled.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

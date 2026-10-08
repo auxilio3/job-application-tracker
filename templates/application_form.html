@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}{{ 'Edit application' if editing else 'Log application' }}{% endblock %}
+
+{% macro interview_row(i={}) %}
+<div class="interview-row row g-2 mb-2">
+    <div class="col-6 col-md-2">
+        <label class="form-label small mb-1">Date</label>
+        <input type="date" class="form-control form-control-sm" name="interview_date" value="{{ i.date or '' }}">
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label small mb-1">Time</label>
+        <input type="time" class="form-control form-control-sm" name="interview_time" value="{{ i.time or '' }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small mb-1">Round</label>
+        <input type="text" class="form-control form-control-sm" name="interview_round" value="{{ i.round or '' }}"
+               maxlength="50" placeholder="Phone screen, Technical…" list="roundOptions">
+    </div>
+    <div class="col-md-4">
+        <label class="form-label small mb-1">Interviewer</label>
+        <input type="text" class="form-control form-control-sm" name="interview_interviewer" value="{{ i.interviewer or '' }}" maxlength="100">
+    </div>
+    <div class="col-md-1 d-flex align-items-end">
+        <button type="button" class="btn btn-sm btn-outline-danger w-100" data-remove-interview aria-label="Remove this interview">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="col-12">
+        <input type="text" class="form-control form-control-sm" name="interview_notes" value="{{ i.notes or '' }}"
+               maxlength="1000" placeholder="Notes (topics, prep, follow-up)" aria-label="Interview notes">
+    </div>
+</div>
+{% endmacro %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('applications') }}">Applications</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ 'Edit' if editing else 'Log' }}</li>
+    </ol>
+</nav>
+<h1 class="h3 mb-4">{{ 'Edit application' if editing else 'Log an application' }}</h1>
+
+{% if errors %}<div class="alert alert-danger">Please fix the highlighted fields below.</div>{% endif %}
+
+<form method="post" novalidate>
+<div class="card mb-4"><div class="card-body">
+    <div class="mb-3">
+        <label for="job_id" class="form-label">Job <span class="text-danger">*</span></label>
+        <select class="form-select {% if errors.job_id %}is-invalid{% endif %}" id="job_id" name="job_id" required>
+            <option value="">— Select —</option>
+            {% for j in jobs %}
+            <option value="{{ j.job_id }}" {% if application.job_id is not none and j.job_id|string == application.job_id|string %}selected{% endif %}>
+                {{ j.company_name }} — {{ j.job_title }}
+            </option>
+            {% endfor %}
+        </select>
+        {% if errors.job_id %}<div class="invalid-feedback">{{ errors.job_id }}</div>{% endif %}
+        <div class="form-text">Not listed? <a href="{{ url_for('job_new') }}">Add the job first</a>.</div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">{{ m.field('application_date', 'Application date', application, errors, type='date', required=true, attrs='max="' ~ today.isoformat() ~ '"') }}</div>
+        {% set status_options = STATUSES + ([current_status] if current_status and current_status not in STATUSES else []) %}
+        <div class="col-md-4">{{ m.select('status', 'Status', status_options|as_options, application.status, errors, required=true, blank=none) }}</div>
+        <div class="col-md-4">{{ m.field('resume_version', 'Resume version', application, errors, attrs='maxlength="50" placeholder="e.g. SOC-v3"') }}</div>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="cover_letter_sent" name="cover_letter_sent"
+               {% if application.cover_letter_sent %}checked{% endif %}>
+        <label class="form-check-label" for="cover_letter_sent">Cover letter sent</label>
+    </div>
+    <div class="row mt-3">
+        <div class="col-md-4">{{ m.field('response_date', 'Response date', application, errors, type='date', attrs='max="' ~ today.isoformat() ~ '"', help='When the employer first replied.') }}</div>
+        <div class="col-md-8">{{ m.textarea('notes', 'Notes', application, errors, rows=2) }}</div>
+    </div>
+</div></div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h2 class="h6 mb-0">Interviews</h2>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="addInterview"><i class="bi bi-plus-lg"></i> Add interview</button>
+    </div>
+    <div class="card-body">
+        {% if errors.interview_data %}<div class="alert alert-danger py-2">{{ errors.interview_data }}</div>{% endif %}
+        <div id="interviewRows">
+            {% for i in application.interviews or [] %}{{ interview_row(i) }}{% endfor %}
+        </div>
+        <p class="text-body-secondary small mb-0" id="noInterviews" {% if application.interviews %}hidden{% endif %}>
+            No interviews yet. Use “Add interview” when one is scheduled.
+        </p>
+    </div>
+</div>
+
+<datalist id="roundOptions">
+    <option value="Phone Screen"><option value="Technical"><option value="Hiring Manager">
+    <option value="Panel"><option value="Final"><option value="HR">
+</datalist>
+
+<template id="interviewTemplate">{{ interview_row() }}</template>
+
+<div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary">{{ 'Save changes' if editing else 'Log application' }}</button>
+    <a href="{{ url_for('application_detail', application_id=application.application_id) if editing else url_for('applications') }}" class="btn btn-outline-secondary">Cancel</a>
+</div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add / remove interview rows. Each row's inputs share names, so Flask
+    // receives them as parallel lists (request.form.getlist).
+    (function () {
+        const rows = document.getElementById('interviewRows');
+        const empty = document.getElementById('noInterviews');
+        const template = document.getElementById('interviewTemplate');
+        const refresh = () => { empty.hidden = rows.children.length > 0; };
+
+        document.getElementById('addInterview').addEventListener('click', () => {
+            rows.appendChild(template.content.cloneNode(true));
+            rows.lastElementChild.querySelector('input').focus();
+            refresh();
+        });
+        rows.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-remove-interview]');
+            if (button) {
+                button.closest('.interview-row').remove();
+                refresh();
+            }
+        });
+    })();
+</script>
+{% endblock %}

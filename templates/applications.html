@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Applications{% endblock %}
+{% block content %}
+{{ m.page_header('Applications', 'Everywhere you have applied', url_for('application_new'), 'Log application') }}
+
+<div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Filter by status">
+    <a href="{{ url_for('applications') }}" class="btn btn-sm {{ 'btn-primary' if not status else 'btn-outline-primary' }}">All</a>
+    {% for s in status_filters %}
+    <a href="{{ url_for('applications', status=s) }}" class="btn btn-sm {{ 'btn-primary' if s == status else 'btn-outline-primary' }}">{{ s }}</a>
+    {% endfor %}
+</div>
+
+{% if applications %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+            <tr>
+                <th>Job</th>
+                <th>Company</th>
+                <th>Applied</th>
+                <th>Status</th>
+                <th>Resume</th>
+                <th class="text-center">Cover letter</th>
+                <th class="text-center">Interviews</th>
+                <th class="text-end">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for a in applications %}
+            <tr>
+                <td><a href="{{ url_for('application_detail', application_id=a.application_id) }}" class="fw-semibold">{{ a.job_title }}</a></td>
+                <td><a href="{{ url_for('company_detail', company_id=a.company_id) }}" class="link-secondary">{{ a.company_name }}</a></td>
+                <td class="text-nowrap">{{ a.application_date|nicedate }}</td>
+                <td>{{ m.status_badge(a.status) }}</td>
+                <td>{{ a.resume_version or '—' }}</td>
+                <td class="text-center">
+                    {% if a.cover_letter_sent %}<i class="bi bi-check-circle-fill text-success" aria-label="Yes"></i>{% else %}<span class="text-body-secondary" aria-label="No">—</span>{% endif %}
+                </td>
+                <td class="text-center">{{ a.interviews|length or '—' }}</td>
+                <td class="text-end text-nowrap">
+                    <a href="{{ url_for('application_edit', application_id=a.application_id) }}" class="btn btn-sm btn-outline-secondary" aria-label="Edit application"><i class="bi bi-pencil"></i></a>
+                    {{ m.delete_button(url_for('application_delete', application_id=a.application_id), 'application for ' ~ a.job_title, small=true) }}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<p class="text-body-secondary small mt-2">{{ applications|length }} application{{ '' if applications|length == 1 else 's' }}</p>
+{% elif status %}
+{{ m.empty_state('No applications with status "' ~ status ~ '".') }}
+{% else %}
+{{ m.empty_state('No applications logged yet.', url_for('application_new'), 'Log application') }}
+{% endif %}
+{% endblock %}
